@@ -25,22 +25,19 @@ variables:
 stages:
 
 # =========================
-# Stage 1: Setup Tools
+# Stage 1: Setup
 # =========================
 - stage: Setup
   displayName: Setup Environment
   jobs:
   - job: InstallTools
-    displayName: Install Required Tools
     steps:
     - script: |
         echo "Installing tools..."
         sudo apt-get update
         sudo apt-get install -y docker.io postgresql-client curl unzip
-        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
         docker --version
         psql --version
-        az --version
       displayName: Install Tools
 
 # =========================
@@ -69,6 +66,8 @@ stages:
           sonar.sourceEncoding=UTF-8
 
     - task: SonarQubeAnalyze@5
+      inputs:
+        jdkversion: 'JAVA_HOME_17_X64'
 
     - task: SonarQubePublish@5
       inputs:
@@ -82,7 +81,6 @@ stages:
   dependsOn: CodeQuality
   jobs:
   - job: ValidateSQL
-    displayName: Validate SQL Execution
     steps:
     - script: |
         echo "Starting PostgreSQL container..."
@@ -113,7 +111,6 @@ stages:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - job: BuildPush
-    displayName: Build & Push Image
     steps:
 
     - task: Docker@2
@@ -146,7 +143,6 @@ stages:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - job: DeployDB
-    displayName: Deploy Step
     steps:
     - script: |
         echo "Deploying database..."
