@@ -46,25 +46,33 @@ stages:
 # =========================
 # Stage 2: SonarQube
 # =========================
--- task: SonarQubePrepare@5
-  inputs:
-    SonarQube: '$(sonarQubeServiceConnection)'
-    scannerMode: 'CLI'
-    configMode: 'manual'
-    cliProjectKey: '$(sonarProjectKey)'
-    cliProjectName: '$(sonarProjectName)'
-    cliSources: '.'
-    extraProperties: |
-      sonar.language=plsql
-      sonar.sources=.
-      sonar.inclusions=**/*.sql
-      sonar.sourceEncoding=UTF-8
+- stage: CodeQuality
+  displayName: SonarQube Analysis
+  dependsOn: Setup
+  jobs:
+  - job: Sonar
+    displayName: Run SonarQube Analysis
+    steps:
 
-- task: SonarQubeAnalyze@5
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: '$(sonarQubeServiceConnection)'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: '$(sonarProjectKey)'
+        cliProjectName: '$(sonarProjectName)'
+        cliSources: '.'
+        extraProperties: |
+          sonar.language=plsql
+          sonar.sources=.
+          sonar.inclusions=**/*.sql
+          sonar.sourceEncoding=UTF-8
 
-- task: SonarQubePublish@5
-  inputs:
-    pollingTimeoutSec: '300'
+    - task: SonarQubeAnalyze@5
+
+    - task: SonarQubePublish@5
+      inputs:
+        pollingTimeoutSec: '300'
 
 # =========================
 # Stage 3: Validate SQL
@@ -74,9 +82,11 @@ stages:
   dependsOn: CodeQuality
   jobs:
   - job: ValidateSQL
+    displayName: Validate SQL Execution
     steps:
     - script: |
         echo "Starting PostgreSQL container..."
+
         docker run -d --name pg-validate \
           -e POSTGRES_PASSWORD=testpass \
           -e POSTGRES_DB=validate_db \
@@ -103,7 +113,9 @@ stages:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - job: BuildPush
+    displayName: Build & Push Image
     steps:
+
     - task: Docker@2
       displayName: Build Image
       inputs:
@@ -134,8 +146,9 @@ stages:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - job: DeployDB
+    displayName: Deploy Step
     steps:
     - script: |
         echo "Deploying database..."
         echo "Deployment completed successfully!"
-      displayName: Deploy Step
+      displayName: Deploy
