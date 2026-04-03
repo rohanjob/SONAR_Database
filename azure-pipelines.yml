@@ -10,7 +10,7 @@ pr:
       - main
 
 pool:
-  name: 'Your-Agent-Pool-Name'
+  name: 'shiva'
 
 variables:
   dockerRegistryServiceConnection: 'ssp-books-acr'
