@@ -24,8 +24,12 @@ variables:
 
 stages:
 
+# =============================================
+# Stage 1: SonarQube Analysis (ONLY MAIN BRANCH)
+# =============================================
 - stage: CodeQuality
   displayName: 'SonarQube Analysis'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
     - job: SonarAnalysis
       steps:
@@ -54,9 +58,13 @@ stages:
             pollingTimeoutSec: '300'
 
 
+# =============================================
+# Stage 2: Validate SQL Scripts
+# =============================================
 - stage: Validate
   displayName: 'Validate SQL'
   dependsOn: CodeQuality
+  condition: or(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
   jobs:
     - job: ValidateSQL
       steps:
@@ -89,6 +97,9 @@ stages:
           displayName: 'Validate SQL Scripts'
 
 
+# =============================================
+# Stage 3: Build & Push Docker Image (MAIN ONLY)
+# =============================================
 - stage: Build
   displayName: 'Build & Push'
   dependsOn: Validate
@@ -120,6 +131,9 @@ stages:
               latest
 
 
+# =============================================
+# Stage 4: Deploy (MAIN ONLY)
+# =============================================
 - stage: Deploy
   displayName: 'Deploy Database'
   dependsOn: Build
