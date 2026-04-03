@@ -41,13 +41,14 @@ stages:
             SonarQube: '$(sonarQubeServiceConnection)'
             scannerMode: 'CLI'
             configMode: 'manual'
-            cliProjectKey: '$(sonarProjectKey)'
+            cliProjectKey: 'ssp_books_database_dev'
             cliProjectName: '$(sonarProjectName)'
             cliSources: '.'
             extraProperties: |
               sonar.sources=.
               sonar.inclusions=**/*.sql
               sonar.sourceEncoding=UTF-8
+              sonar.branch.name=
 
         - task: SonarQubeAnalyze@7
           displayName: 'Run Analysis'
