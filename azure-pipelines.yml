@@ -24,9 +24,6 @@ variables:
 
 stages:
 
-# =============================================
-# Stage 1: SonarQube Analysis
-# =============================================
 - stage: CodeQuality
   displayName: 'SonarQube Analysis'
   jobs:
@@ -57,9 +54,6 @@ stages:
             pollingTimeoutSec: '300'
 
 
-# =============================================
-# Stage 2: Validate SQL Scripts
-# =============================================
 - stage: Validate
   displayName: 'Validate SQL'
   dependsOn: CodeQuality
@@ -75,12 +69,11 @@ stages:
               -p 5433:5432 \
               postgres:16-alpine
 
-            echo "Waiting for PostgreSQL to be ready..."
+            echo "Waiting for PostgreSQL..."
 
-            for i in {1..10}
+            for i in 1 2 3 4 5 6 7 8 9 10
             do
               PGPASSWORD=testpass pg_isready -h localhost -p 5433 -U postgres && break
-              echo "Waiting..."
               sleep 5
             done
 
@@ -90,15 +83,12 @@ stages:
             echo "Running seed.sql..."
             PGPASSWORD=testpass psql -h localhost -p 5433 -U postgres -d validate_db -f seed.sql
 
-            echo "Cleaning up..."
+            echo "Cleanup..."
             docker stop pg-validate || true
             docker rm pg-validate || true
           displayName: 'Validate SQL Scripts'
 
 
-# =============================================
-# Stage 3: Build & Push Docker Image
-# =============================================
 - stage: Build
   displayName: 'Build & Push'
   dependsOn: Validate
@@ -130,9 +120,6 @@ stages:
               latest
 
 
-# =============================================
-# Stage 4: Deploy
-# =============================================
 - stage: Deploy
   displayName: 'Deploy Database'
   dependsOn: Build
@@ -143,4 +130,4 @@ stages:
         - script: |
             echo "Deploying database..."
             echo "Done!"
-          displayName: 'Deploy Step'+
+          displayName: 'Deploy Step'
