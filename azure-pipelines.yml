@@ -32,29 +32,30 @@ stages:
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
     - job: SonarAnalysis
+      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
       steps:
         - checkout: self
 
         - task: SonarQubePrepare@7
-          displayName: 'Prepare SonarQube'
           inputs:
             SonarQube: '$(sonarQubeServiceConnection)'
             scannerMode: 'CLI'
             configMode: 'manual'
-            cliProjectKey: 'ssp_books_database_dev'
-            cliProjectName: '$(sonarProjectName)'
+            cliProjectKey: 'ssp_books_database'
+            cliProjectName: 'SSP Books Database'
             cliSources: '.'
             extraProperties: |
               sonar.sources=.
               sonar.inclusions=**/*.sql
               sonar.sourceEncoding=UTF-8
               sonar.branch.name=
+              sonar.pullrequest.key=
+              sonar.pullrequest.branch=
+              sonar.pullrequest.base=
 
         - task: SonarQubeAnalyze@7
-          displayName: 'Run Analysis'
 
         - task: SonarQubePublish@7
-          displayName: 'Publish Results'
           inputs:
             pollingTimeoutSec: '300'
 
