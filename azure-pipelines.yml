@@ -4,10 +4,8 @@ trigger:
       - main
       - develop
 
-pr:
-  branches:
-    include:
-      - main
+# ❌ IMPORTANT FIX: Disable PR trigger (prevents sonar.pullrequest injection)
+pr: none
 
 pool:
   name: 'shiva'
@@ -34,7 +32,6 @@ stages:
   jobs:
     - job: SonarAnalysis
       displayName: 'Run SonarQube Analysis'
-      condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
 
       steps:
         - checkout: self
@@ -53,6 +50,13 @@ stages:
               sonar.inclusions=**/*.sql
               sonar.sourceEncoding=UTF-8
               sonar.qualitygate.wait=true
+              sonar.branch.name=
+
+        # 🔥 DEBUG (optional but recommended once)
+        - script: |
+            echo "Branch: $(Build.SourceBranch)"
+            echo "Build Reason: $(Build.Reason)"
+          displayName: 'Debug Build Context'
 
         - task: SonarQubeAnalyze@7
           displayName: 'Run SonarQube Analysis'
@@ -69,6 +73,7 @@ stages:
   displayName: 'Validate SQL'
   dependsOn: CodeQuality
   condition: or(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+
   jobs:
     - job: ValidateSQL
       steps:
@@ -100,7 +105,6 @@ stages:
             docker rm pg-validate || true
           displayName: 'Validate SQL Scripts'
 
-
 # =============================================
 # Stage 3: Build & Push Docker Image (MAIN ONLY)
 # =============================================
@@ -108,6 +112,7 @@ stages:
   displayName: 'Build & Push'
   dependsOn: Validate
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
   jobs:
     - job: BuildAndPush
       steps:
@@ -134,7 +139,6 @@ stages:
               $(tag)
               latest
 
-
 # =============================================
 # Stage 4: Deploy (MAIN ONLY)
 # =============================================
@@ -142,6 +146,7 @@ stages:
   displayName: 'Deploy Database'
   dependsOn: Build
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
   jobs:
     - job: DeployDB
       steps:
