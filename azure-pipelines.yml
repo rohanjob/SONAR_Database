@@ -30,13 +30,17 @@ stages:
 - stage: CodeQuality
   displayName: 'SonarQube Analysis'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+
   jobs:
     - job: SonarAnalysis
+      displayName: 'Run SonarQube Analysis'
       condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+
       steps:
         - checkout: self
 
         - task: SonarQubePrepare@7
+          displayName: 'Prepare SonarQube Analysis'
           inputs:
             SonarQube: '$(sonarQubeServiceConnection)'
             scannerMode: 'CLI'
@@ -45,16 +49,18 @@ stages:
             cliProjectName: 'SSP Books Database'
             cliSources: '.'
             extraProperties: |
-             sonar.sources=.
-             sonar.inclusions=**/*.sql
-             sonar.sourceEncoding=UTF-8
+              sonar.sources=.
+              sonar.inclusions=**/*.sql
+              sonar.sourceEncoding=UTF-8
+              sonar.qualitygate.wait=true
 
         - task: SonarQubeAnalyze@7
+          displayName: 'Run SonarQube Analysis'
 
         - task: SonarQubePublish@7
+          displayName: 'Publish Quality Gate Result'
           inputs:
             pollingTimeoutSec: '300'
-
 
 # =============================================
 # Stage 2: Validate SQL Scripts
