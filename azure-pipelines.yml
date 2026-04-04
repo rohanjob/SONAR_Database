@@ -4,11 +4,10 @@ trigger:
       - main
       - develop
 
-# ❌ IMPORTANT FIX: Disable PR trigger (prevents sonar.pullrequest injection)
 pr: none
 
 pool:
-  name: 'shiva'
+  name: 'ShivaRam'
 
 variables:
   dockerRegistryServiceConnection: 'ssp-books-acr'
