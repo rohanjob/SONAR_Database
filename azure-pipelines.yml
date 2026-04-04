@@ -21,7 +21,7 @@ variables:
 stages:
 
 # =============================================
-# Stage 1: SonarQube Analysis (ONLY MAIN BRANCH)
+# Stage 1: SonarQube Analysis
 # =============================================
 - stage: CodeQuality
   displayName: 'SonarQube Analysis'
@@ -40,14 +40,15 @@ stages:
             SonarQube: '$(sonarQubeServiceConnection)'
             scannerMode: 'CLI'
             configMode: 'manual'
-            cliProjectKey: 'ssp_books_database'
-            cliProjectName: 'SSP Books Database'
+            cliProjectKey: '$(sonarProjectKey)'
+            cliProjectName: '$(sonarProjectName)'
             cliSources: '.'
             extraProperties: |
               sonar.sources=.
               sonar.inclusions=**/*.sql
               sonar.sourceEncoding=UTF-8
               sonar.qualitygate.wait=true
+              sonar.branch.name=
 
         - script: |
             echo "Branch: $(Build.SourceBranch)"
@@ -68,7 +69,7 @@ stages:
 - stage: Validate
   displayName: 'Validate SQL'
   dependsOn: CodeQuality
-  condition: or(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+  condition: succeeded()
 
   jobs:
     - job: ValidateSQL
@@ -102,7 +103,7 @@ stages:
           displayName: 'Validate SQL Scripts'
 
 # =============================================
-# Stage 3: Build & Push Docker Image (MAIN ONLY)
+# Stage 3: Build & Push Docker Image
 # =============================================
 - stage: Build
   displayName: 'Build & Push'
@@ -136,7 +137,7 @@ stages:
               latest
 
 # =============================================
-# Stage 4: Deploy (MAIN ONLY)
+# Stage 4: Deploy
 # =============================================
 - stage: Deploy
   displayName: 'Deploy Database'
