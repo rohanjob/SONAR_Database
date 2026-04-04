@@ -14,54 +14,32 @@ variables:
   containerRegistry: 'sspbooksacr.azurecr.io'
   dockerfilePath: 'Dockerfile'
   tag: '$(Build.BuildId)'
-  sonarQubeServiceConnection: 'SonarQube-Service'
-  sonarProjectKey: 'ssp_books_database'
-  sonarProjectName: 'SSP Books Database'
 
 stages:
 
 # =============================================
-# Stage 1: SonarQube Analysis
+# Stage 1: SonarQube Analysis (CLI - FINAL FIX)
 # =============================================
 - stage: CodeQuality
   displayName: 'SonarQube Analysis'
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
 
   jobs:
-    - job: SonarAnalysis
-      displayName: 'Run SonarQube Analysis'
+    - job: SonarCLI
+      displayName: 'Run Sonar Scanner (Manual CLI)'
 
       steps:
         - checkout: self
 
-        - task: SonarQubePrepare@7
-          displayName: 'Prepare SonarQube Analysis'
-          inputs:
-            SonarQube: '$(sonarQubeServiceConnection)'
-            scannerMode: 'CLI'
-            configMode: 'manual'
-            cliProjectKey: '$(sonarProjectKey)'
-            cliProjectName: '$(sonarProjectName)'
-            cliSources: '.'
-            extraProperties: |
-              sonar.sources=.
-              sonar.inclusions=**/*.sql
-              sonar.sourceEncoding=UTF-8
-              sonar.qualitygate.wait=true
-              sonar.branch.name=
-
         - script: |
-            echo "Branch: $(Build.SourceBranch)"
-            echo "Build Reason: $(Build.Reason)"
-          displayName: 'Debug Build Context'
+            echo "Running SonarQube via CLI..."
 
-        - task: SonarQubeAnalyze@7
-          displayName: 'Run SonarQube Analysis'
-
-        - task: SonarQubePublish@7
-          displayName: 'Publish Quality Gate Result'
-          inputs:
-            pollingTimeoutSec: '300'
+            sonar-scanner \
+            -Dsonar.projectKey=ssp_books_database \
+            -Dsonar.sources=. \
+            -Dsonar.inclusions=**/*.sql \
+            -Dsonar.host.url=http://20.24.192.145:9000 \
+            -Dsonar.token=$(SONAR_TOKEN)
+          displayName: 'Run Sonar Scanner'
 
 # =============================================
 # Stage 2: Validate SQL Scripts
