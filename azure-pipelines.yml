@@ -48,7 +48,7 @@ stages:
             fi
           displayName: 'Create Dummy File'
 
-        - task: SonarQubePrepare@5
+        - task: SonarQubePrepare@8
           inputs:
             SonarQube: '$(sonarQubeServiceConnection)'
             scannerMode: 'CLI'
@@ -57,12 +57,14 @@ stages:
             cliProjectName: '$(sonarProjectName)'
             cliSources: '.'
             extraProperties: |
+              sonar.language=plsql
               sonar.sources=.
+              sonar.inclusions=**/*.sql
               sonar.sourceEncoding=UTF-8
 
-        - task: SonarQubeAnalyze@5
+        - task: SonarQubeAnalyze@8
 
-        - task: SonarQubePublish@5
+        - task: SonarQubePublish@8
           inputs:
             pollingTimeoutSec: '300'
 
