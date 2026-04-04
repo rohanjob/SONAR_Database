@@ -18,14 +18,14 @@ variables:
 stages:
 
 # =============================================
-# Stage 1: SonarQube Analysis (CLI - FINAL FIX)
+# Stage 1: SonarQube Analysis (CLI - FIXED)
 # =============================================
 - stage: CodeQuality
   displayName: 'SonarQube Analysis'
 
   jobs:
     - job: SonarCLI
-      displayName: 'Run Sonar Scanner (Manual CLI)'
+      displayName: 'Run Sonar Scanner'
 
       steps:
         - checkout: self
@@ -35,6 +35,8 @@ stages:
 
             sonar-scanner \
             -Dsonar.projectKey=ssp_books_database \
+            -Dsonar.projectName="SSP Books Database" \
+            -Dsonar.projectVersion=$(Build.BuildId) \
             -Dsonar.sources=. \
             -Dsonar.inclusions=**/*.sql \
             -Dsonar.host.url=http://20.24.192.145:9000 \
