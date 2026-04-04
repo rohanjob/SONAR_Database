@@ -62,6 +62,17 @@ stages:
               sonar.inclusions=**/*.sql
               sonar.sourceEncoding=UTF-8
 
+        # Required for SonarQube Community Edition to bypass branch analysis restriction
+        - task: PowerShell@2
+          displayName: 'Remove branch name for Community Edition'
+          inputs:
+            targetType: 'inline'
+            script: |
+              $params = $env:SONARQUBE_SCANNER_PARAMS | ConvertFrom-Json
+              $params.PSObject.Properties.Remove('sonar.branch.name')
+              $newParams = $params | ConvertTo-Json -Compress
+              Write-Host "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$newParams"
+
         - task: SonarQubeAnalyze@8
 
         - task: SonarQubePublish@8
