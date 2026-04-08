@@ -1,9 +1,14 @@
 # 🗄️ SSP Books - Database Layer
 
 PostgreSQL database for the SSP Books course buying platform.
-###🚀Implemention Images(Azure DevOps && SonarQube)
+###🚀Implemention Images(Azure DevOps ,SonarQube  &&  Trivy cI)
 ![Architecture Diagram](images/AzureD.png)
+## 🚀🚀SonarQube
 ![Architecture Diagram](images/SonarQ.png)
+## 🚀🚀🚀Trivy CI
+![Architecture Diagram](images/TRIV.png)
+![Architecture Diagram](images/WithTrivy.png)
+
 
 ## 📋 Schema Overview
 
