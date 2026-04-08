@@ -48,7 +48,7 @@ stages:
             fi
           displayName: 'Create Dummy File'
 
-        - task: SonarQubePrepare@6
+        - task: SonarQubePrepare@8
           inputs:
             SonarQube: 'SonarQube-Service'
             scannerMode: 'CLI'
