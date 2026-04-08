@@ -122,23 +122,23 @@ stages:
           displayName: 'Validate SQL Scripts'
 
 # ==============================================
-# Stage 3: Build & Push Docker Image (FIXED LOGIN)
+# Stage 3: Build Docker Image
 # ==============================================
 - stage: Build
-  displayName: 'Build & Push Docker Image'
+  displayName: 'Build Docker Image'
   dependsOn: Validate
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
   jobs:
-    - job: BuildAndPush
-      displayName: 'Build and Push Docker Image'
+    - job: Build
+      displayName: 'Build Docker Image'
       steps:
         - checkout: self
 
         - task: Docker@2
-          displayName: 'Build and Push Docker Image'
+          displayName: 'Build Docker Image'
           inputs:
-            command: buildAndPush
+            command: build
             repository: '$(imageRepository)'
             dockerfile: '$(dockerfilePath)'
             containerRegistry: '$(dockerRegistryServiceConnection)'
@@ -147,11 +147,73 @@ stages:
               latest
 
 # ==============================================
-# Stage 4: Deploy
+# Stage 4: Trivy Installation
+# ==============================================
+- stage: TrivyInstall
+  displayName: 'Trivy Installation'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+  jobs:
+    - job: InstallTrivy
+      displayName: 'Install Trivy Scanner'
+      steps:
+        - script: |
+            echo "Installing Trivy..."
+            sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            sudo apt-get update
+            sudo apt-get install trivy -y
+          displayName: 'Install Trivy'
+
+# ==============================================
+# Stage 5: Trivy Scanner
+# ==============================================
+- stage: TrivyScanner
+  displayName: 'Trivy Scanner'
+  dependsOn: TrivyInstall
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+  jobs:
+    - job: ScanImage
+      displayName: 'Scan Docker Image'
+      steps:
+        - script: |
+            echo "Scanning Docker Image..."
+            trivy image --severity HIGH,CRITICAL $(containerRegistry)/$(imageRepository):$(tag)
+          displayName: 'Run Trivy Scan'
+
+# ==============================================
+# Stage 6: Push Docker Image
+# ==============================================
+- stage: Push
+  displayName: 'Push Docker Image'
+  dependsOn: TrivyScanner
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+  jobs:
+    - job: Push
+      displayName: 'Push Docker Image'
+      steps:
+        - checkout: none
+
+        - task: Docker@2
+          displayName: 'Push Docker Image'
+          inputs:
+            command: push
+            repository: '$(imageRepository)'
+            containerRegistry: '$(dockerRegistryServiceConnection)'
+            tags: |
+              $(tag)
+              latest
+
+# ==============================================
+# Stage 7: Deploy
 # ==============================================
 - stage: Deploy
   displayName: 'Deploy Database'
-  dependsOn: Build
+  dependsOn: Push
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
   jobs:
